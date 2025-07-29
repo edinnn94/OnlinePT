@@ -1,0 +1,197 @@
+
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OnlinePT</title>
+  <style>
+    body {
+      font-family: monospace, monospace;
+      background: #f0f0f0;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    #greeting {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    #greeting img {
+      width: 50px;
+      height: 50px;
+      margin-right: 12px;
+    }
+    button {
+      font-family: monospace;
+      font-size: 1.1em;
+      padding: 10px 16px;
+      margin: 8px 5px 0 0;
+      border-radius: 5px;
+      border: 1px solid #333;
+      background: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #eee;
+    }
+    #chatbotText {
+      min-height: 60px;
+      white-space: pre-wrap;
+      border-bottom: 2px solid #333;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      font-size: 1.1em;
+    }
+    input[type="text"] {
+      width: 100%;
+      font-family: monospace;
+      font-size: 1.1em;
+      padding: 8px;
+      margin: 6px 0 12px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #navButtons {
+      margin-top: 10px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div id="mainMenu">
+  <div id="greeting">
+    <img src="robot-logo.png" alt="Robot Logo" />
+    <p>Hej, jag är din personliga AI-tränare. Vad kan jag hjälpa dig med?</p>
+  </div>
+  <button data-section="training">Personlig träningsplan</button>
+  <button data-section="nutrition">Kostplan</button>
+  <button data-section="other">Annat</button>
+</div>
+
+<div id="chatSection" class="hidden">
+  <div id="chatbotText"></div>
+  <input type="text" id="answerInput" autocomplete="off" />
+  <div id="navButtons">
+    <button id="backBtn">← Tillbaka</button>
+    <button id="nextBtn" disabled>→ Nästa</button>
+  </div>
+</div>
+
+<script>
+  const questions = {
+    training: [
+      "Vilket är ditt träningsmål? (exempelvis styrketräning, kondition, rörlighet etc)",
+      "Hur många gånger i veckan vill du träna?",
+      "Vill du träna hemma eller på gym?"
+    ],
+    nutrition: [
+      "Vad kul! Men först behöver jag lite mer information om dig:\nAnge din längd (cm), vikt (kg), ålder och aktivitetsnivå (t.ex. låg, måttlig, intensiv), separerade med kommatecken.",
+      "Hur många måltider vill du äta per dag?",
+      "Vill du fokusera på något särskilt? (t.ex. viktnedgång, muskelökning, allmän hälsa)"
+    ],
+    other: [
+      "Vad behöver du hjälp med? Vad undrar du över?"
+    ]
+  };
+
+  let section = 'main';
+  let questionIndex = 0;
+  let answers = {
+    training: [],
+    nutrition: [],
+    other: []
+  };
+
+  const mainMenu = document.getElementById('mainMenu');
+  const chatSection = document.getElementById('chatSection');
+  const chatbotText = document.getElementById('chatbotText');
+  const answerInput = document.getElementById('answerInput');
+  const nextBtn = document.getElementById('nextBtn');
+  const backBtn = document.getElementById('backBtn');
+
+  function typeWriter(text, i = 0, callback) {
+    if (i < text.length) {
+      chatbotText.textContent += text.charAt(i);
+      setTimeout(() => typeWriter(text, i + 1, callback), 30);
+    } else {
+      if (callback) callback();
+    }
+  }
+
+  function showQuestion() {
+    chatbotText.textContent = "";
+    answerInput.value = "";
+    nextBtn.disabled = true;
+    const q = questions[section][questionIndex];
+    typeWriter(q, 0, () => {
+      if (answers[section][questionIndex]) {
+        answerInput.value = answers[section][questionIndex];
+        nextBtn.disabled = false;
+      }
+      answerInput.focus();
+    });
+  }
+
+  function updateView() {
+    if (section === 'main') {
+      mainMenu.classList.remove('hidden');
+      chatSection.classList.add('hidden');
+    } else {
+      mainMenu.classList.add('hidden');
+      chatSection.classList.remove('hidden');
+      showQuestion();
+    }
+  }
+
+  function goNext() {
+    const val = answerInput.value.trim();
+    if (!val) return;
+    answers[section][questionIndex] = val;
+
+    if (questionIndex < questions[section].length - 1) {
+      questionIndex++;
+    } else {
+      alert("Tack för dina svar! Du kan gå tillbaka till menyn och välja något annat.");
+      section = 'main';
+      questionIndex = 0;
+    }
+    updateView();
+  }
+
+  function goBack() {
+    if (section === 'main') return;
+
+    if (questionIndex > 0) {
+      questionIndex--;
+    } else {
+      section = 'main';
+      questionIndex = 0;
+    }
+    updateView();
+  }
+
+  document.querySelectorAll('#mainMenu button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      section = btn.dataset.section;
+      questionIndex = 0;
+      updateView();
+    });
+  });
+
+  nextBtn.addEventListener('click', goNext);
+  backBtn.addEventListener('click', goBack);
+  answerInput.addEventListener('input', () => {
+    nextBtn.disabled = answerInput.value.trim() === '';
+  });
+</script>
+
+</body>
+</html>
